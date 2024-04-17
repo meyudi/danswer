@@ -29,7 +29,6 @@ from danswer.connectors.requesttracker.connector import RequestTrackerConnector
 from danswer.connectors.sharepoint.connector import SharepointConnector
 from danswer.connectors.slab.connector import SlabConnector
 from danswer.connectors.slack.connector import SlackPollConnector
-from danswer.connectors.slack.load_connector import SlackLoadConnector
 from danswer.connectors.web.connector import WebConnector
 from danswer.connectors.zendesk.connector import ZendeskConnector
 from danswer.connectors.zulip.connector import ZulipConnector
@@ -47,7 +46,6 @@ def identify_connector_class(
         DocumentSource.WEB: WebConnector,
         DocumentSource.FILE: LocalFileConnector,
         DocumentSource.SLACK: {
-            InputType.LOAD_STATE: SlackLoadConnector,
             InputType.POLL: SlackPollConnector,
         },
         DocumentSource.GITHUB: GithubConnector,
