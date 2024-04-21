@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager
 from typing import Any
 from typing import cast
 
-import nltk  # type:ignore
 import uvicorn
 from fastapi import APIRouter
 from fastapi import FastAPI
@@ -47,11 +46,14 @@ from danswer.db.embedding_model import get_secondary_db_embedding_model
 from danswer.db.engine import get_sqlalchemy_engine
 from danswer.db.index_attempt import cancel_indexing_attempts_past_model
 from danswer.db.index_attempt import expire_index_attempts
+from danswer.db.swap_index import check_index_swap
 from danswer.document_index.factory import get_default_document_index
 from danswer.dynamic_configs.port_configs import port_filesystem_to_postgres
 from danswer.llm.factory import get_default_llm
 from danswer.llm.utils import get_default_llm_version
+from danswer.search.retrieval.search_runner import download_nltk_data
 from danswer.search.search_nlp_models import warm_up_encoders
+from danswer.server.auth_check import check_router_auth
 from danswer.server.danswer_api.ingestion import get_danswer_api_key
 from danswer.server.danswer_api.ingestion import router as danswer_api_router
 from danswer.server.documents.cc_pair import router as cc_pair_router
@@ -179,6 +181,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         )
 
     with Session(engine) as db_session:
+        check_index_swap(db_session=db_session)
         db_embedding_model = get_current_db_embedding_model(db_session)
         secondary_db_embedding_model = get_secondary_db_embedding_model(db_session)
 
@@ -205,9 +208,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             logger.info("Reranking step of search flow is enabled.")
 
         logger.info("Verifying query preprocessing (NLTK) data is downloaded")
-        nltk.download("stopwords", quiet=True)
-        nltk.download("wordnet", quiet=True)
-        nltk.download("punkt", quiet=True)
+        download_nltk_data()
 
         logger.info("Verifying default connector/credential exist.")
         create_initial_public_credential(db_session)
@@ -354,6 +355,9 @@ def get_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Ensure all routes have auth enabled or are explicitly marked as public
+    check_router_auth(application)
 
     return application
 
