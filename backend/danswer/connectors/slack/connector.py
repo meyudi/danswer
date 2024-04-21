@@ -379,6 +379,7 @@ if __name__ == "__main__":
     import os
     import time
 
+    # TODO: provide a list of channels
     slack_channel = os.environ.get("SLACK_CHANNEL")
     connector = SlackPollConnector(
         workspace=os.environ["SLACK_WORKSPACE"],
@@ -387,6 +388,7 @@ if __name__ == "__main__":
     connector.load_credentials({"slack_bot_token": os.environ["SLACK_BOT_TOKEN"]})
 
     current = time.time()
+    # TODO: configure from when to pull the data
     one_day_ago = current - 24 * 60 * 60  # 1 day
     document_batches = connector.poll_source(one_day_ago, current)
 

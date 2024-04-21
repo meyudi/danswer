@@ -257,9 +257,11 @@ def get_llm_max_tokens(
     model_name = model_name or get_default_llm_version()[0]
 
     try:
+        # this if else need to be made more generic to handle multiple model provider
         if model_provider == "openai":
             model_obj = model_map[model_name]
         else:
+            # for bedrock, the key is includes the region bedrock/us-east-1/anthropic.claude-v2:1
             model_obj = model_map[f"{model_provider}/{model_name}"]
 
         if "max_input_tokens" in model_obj:
