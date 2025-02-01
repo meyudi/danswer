@@ -12,12 +12,15 @@ from sqlalchemy.dialects import postgresql
 # revision identifiers, used by Alembic.
 revision = "d5645c915d0e"
 down_revision = "8e26726b7683"
-branch_labels = None
-depends_on = None
+branch_labels: None = None
+depends_on: None = None
 
 
 def upgrade() -> None:
     op.drop_table("deletion_attempt")
+
+    # Remove the DeletionStatus enum
+    op.execute("DROP TYPE IF EXISTS deletionstatus;")
 
 
 def downgrade() -> None:

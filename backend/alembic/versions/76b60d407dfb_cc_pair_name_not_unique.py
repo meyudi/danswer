@@ -11,8 +11,8 @@ import sqlalchemy as sa
 # revision identifiers, used by Alembic.
 revision = "76b60d407dfb"
 down_revision = "b156fa702355"
-branch_labels = None
-depends_on = None
+branch_labels: None = None
+depends_on: None = None
 
 
 def upgrade() -> None:
@@ -28,5 +28,9 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # This wasn't really required by the code either, no good reason to make it unique again
-    pass
+    op.create_unique_constraint(
+        "connector_credential_pair__name__key", "connector_credential_pair", ["name"]
+    )
+    op.alter_column(
+        "connector_credential_pair", "name", existing_type=sa.String(), nullable=True
+    )

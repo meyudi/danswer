@@ -7,10 +7,14 @@ import {
 import { fetchSS } from "@/lib/utilsSS";
 import { redirect } from "next/navigation";
 import { BackendChatSession } from "../../interfaces";
-import { Header } from "@/components/Header";
 import { SharedChatDisplay } from "./SharedChatDisplay";
-import { getSettingsSS } from "@/lib/settings";
-import { Settings } from "@/app/admin/settings/interfaces";
+import { Persona } from "@/app/admin/assistants/interfaces";
+import {
+  FetchAssistantsResponse,
+  fetchAssistantsSS,
+} from "@/lib/assistants/fetchAssistantsSS";
+import { defaultPersona } from "@/app/admin/assistants/lib";
+import { constructMiniFiedPersona } from "@/lib/assistantIconUtils";
 
 async function getSharedChat(chatId: string) {
   const response = await fetchSS(
@@ -22,18 +26,21 @@ async function getSharedChat(chatId: string) {
   return null;
 }
 
-export default async function Page({ params }: { params: { chatId: string } }) {
+export default async function Page(props: {
+  params: Promise<{ chatId: string }>;
+}) {
+  const params = await props.params;
   const tasks = [
     getAuthTypeMetadataSS(),
     getCurrentUserSS(),
     getSharedChat(params.chatId),
-    getSettingsSS(),
   ];
 
   // catch cases where the backend is completely unreachable here
   // without try / catch, will just raise an exception and the page
   // will not render
-  let results: (User | AuthTypeMetadata | null)[] = [null, null, null, null];
+  let results: (User | AuthTypeMetadata | [Persona[], string | null] | null)[] =
+    [null, null, null];
   try {
     results = await Promise.all(tasks);
   } catch (e) {
@@ -42,7 +49,6 @@ export default async function Page({ params }: { params: { chatId: string } }) {
   const authTypeMetadata = results[0] as AuthTypeMetadata | null;
   const user = results[1] as User | null;
   const chatSession = results[2] as BackendChatSession | null;
-  const settings = results[3] as Settings | null;
 
   const authDisabled = authTypeMetadata?.authType === "disabled";
   if (!authDisabled && !user) {
@@ -53,15 +59,12 @@ export default async function Page({ params }: { params: { chatId: string } }) {
     return redirect("/auth/waiting-on-verification");
   }
 
-  return (
-    <div>
-      <div className="absolute top-0 z-40 w-full">
-        <Header user={user} settings={settings} />
-      </div>
-
-      <div className="flex relative bg-background text-default overflow-hidden pt-16 h-screen">
-        <SharedChatDisplay chatSession={chatSession} />
-      </div>
-    </div>
+  const persona: Persona = constructMiniFiedPersona(
+    chatSession?.persona_icon_color ?? null,
+    chatSession?.persona_icon_shape ?? null,
+    chatSession?.persona_name ?? "",
+    chatSession?.persona_id ?? 0
   );
+
+  return <SharedChatDisplay chatSession={chatSession} persona={persona} />;
 }

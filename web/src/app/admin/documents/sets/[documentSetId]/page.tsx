@@ -1,16 +1,14 @@
 "use client";
+import { use } from "react";
 
 import { ErrorCallout } from "@/components/ErrorCallout";
-import { useDocumentSets } from "../hooks";
-import {
-  useConnectorCredentialIndexingStatus,
-  useUserGroups,
-} from "@/lib/hooks";
+import { refreshDocumentSets, useDocumentSets } from "../hooks";
+import { useConnectorStatus, useUserGroups } from "@/lib/hooks";
 import { ThreeDotsLoader } from "@/components/Loading";
 import { AdminPageTitle } from "@/components/admin/Title";
 import { BookmarkIcon } from "@/components/icons/icons";
 import { BackButton } from "@/components/BackButton";
-import { Card } from "@tremor/react";
+import CardSection from "@/components/admin/CardSection";
 import { DocumentSetCreationForm } from "../DocumentSetCreationForm";
 import { useRouter } from "next/navigation";
 import { usePopup } from "@/components/admin/connectors/Popup";
@@ -29,7 +27,7 @@ function Main({ documentSetId }: { documentSetId: number }) {
     data: ccPairs,
     isLoading: isCCPairsLoading,
     error: ccPairsError,
-  } = useConnectorCredentialIndexingStatus();
+  } = useConnectorStatus();
 
   // EE only
   const { data: userGroups, isLoading: userGroupsIsLoading } = useUserGroups();
@@ -77,26 +75,26 @@ function Main({ documentSetId }: { documentSetId: number }) {
         title={documentSet.name}
       />
 
-      <Card>
+      <CardSection>
         <DocumentSetCreationForm
           ccPairs={ccPairs}
           userGroups={userGroups}
           onClose={() => {
+            refreshDocumentSets();
             router.push("/admin/documents/sets");
           }}
           setPopup={setPopup}
           existingDocumentSet={documentSet}
         />
-      </Card>
+      </CardSection>
     </div>
   );
 }
 
-export default function Page({
-  params,
-}: {
-  params: { documentSetId: string };
+export default function Page(props: {
+  params: Promise<{ documentSetId: string }>;
 }) {
+  const params = use(props.params);
   const documentSetId = parseInt(params.documentSetId);
 
   return (

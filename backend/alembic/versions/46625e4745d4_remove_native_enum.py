@@ -11,13 +11,13 @@ from sqlalchemy import String
 # revision identifiers, used by Alembic.
 revision = "46625e4745d4"
 down_revision = "9d97fecfab7f"
-branch_labels = None
-depends_on = None
+branch_labels: None = None
+depends_on: None = None
 
 
 def upgrade() -> None:
     # At this point, we directly changed some previous migrations,
-    # https://github.com/danswer-ai/danswer/pull/637
+    # https://github.com/onyx-dot-app/onyx/pull/637
     # Due to using Postgres native Enums, it caused some complications for first time users.
     # To remove those complications, all Enums are only handled application side moving forward.
     # This migration exists to ensure that existing users don't run into upgrade issues.
